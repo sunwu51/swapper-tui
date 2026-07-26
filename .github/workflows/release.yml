@@ -67,12 +67,25 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check Root npm Package Exists
+        id: npm
+        shell: bash
+        run: |
+          PACKAGE_NAME="$(node -p 'require("./package.json").name')"
+          PACKAGE_VERSION="${{ steps.version.outputs.current }}"
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version --registry https://registry.npmjs.org/ > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Dependencies
-        if: steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false' || steps.npm.outputs.exists == 'false'
         run: bun install
 
       - name: Build Packages
-        if: steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false' || steps.npm.outputs.exists == 'false'
         run: bun run build:npm
 
       - name: Verify Darwin Signatures
@@ -112,5 +125,5 @@ jobs:
           generate_release_notes: true
 
       - name: Publish npm Packages
-        if: steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false' || steps.npm.outputs.exists == 'false'
         run: bun run publish:npm
