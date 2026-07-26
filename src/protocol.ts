@@ -18,6 +18,15 @@ function nonEmptyChecker(value: string): boolean {
   return value.trim().length > 0
 }
 
+function classLoaderHashParam() {
+  return { name: "ClassLoaderHash (optional)", inputType: "text" as const, checker: () => true, value: "" }
+}
+
+function optionalClassLoaderHash(value: string): Record<string, string> {
+  const classLoaderHash = value.trim()
+  return classLoaderHash ? { classLoaderHash } : {}
+}
+
 function engineToMode(value: string): number {
   return value === "javassist" ? 0 : 1
 }
@@ -95,6 +104,7 @@ export const menu: FunctionDefinition[] = [
     name: "Watch",
     params: [
       { name: "ClassName#MethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
+      classLoaderHashParam(),
       { name: "MinCost", inputType: "text", checker: () => true, value: "0" },
       { name: "DepthForJson", inputType: "text", checker: () => true, value: "3" },
       {
@@ -113,16 +123,18 @@ export const menu: FunctionDefinition[] = [
     toPayload: (params: string[]) => toolCall("watch", {
       ...commonArgs(),
       signature: params[0],
-      minCost: Number.parseInt(params[1] || "0", 10) || 0,
-      depthForJson: Number.parseInt(params[2] || "3", 10) || 3,
-      ognl: params[3]?.trim(),
-      variables: parseVariables(params[4] ?? "")
+      ...optionalClassLoaderHash(params[1] ?? ""),
+      minCost: Number.parseInt(params[2] || "0", 10) || 0,
+      depthForJson: Number.parseInt(params[3] || "3", 10) || 3,
+      ognl: params[4]?.trim(),
+      variables: parseVariables(params[5] ?? "")
     })
   },
   {
     name: "OuterWatch",
     params: [
       { name: "ClassName#MethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
+      classLoaderHashParam(),
       { name: "InnerClassName#InnerMethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
       { name: "IncludeNested", inputType: "select", checker: () => true, value: "true", options: booleanOptions },
       { name: "DepthForJson", inputType: "text", checker: () => true, value: "3" },
@@ -142,17 +154,19 @@ export const menu: FunctionDefinition[] = [
     toPayload: (params: string[]) => toolCall("outer_watch", {
       ...commonArgs(),
       signature: params[0],
-      innerSignature: params[1],
-      includeNested: params[2] !== "false",
-      depthForJson: Number.parseInt(params[3] || "3", 10) || 3,
-      ognl: params[4]?.trim(),
-      variables: parseVariables(params[5] ?? "")
+      ...optionalClassLoaderHash(params[1] ?? ""),
+      innerSignature: params[2],
+      includeNested: params[3] !== "false",
+      depthForJson: Number.parseInt(params[4] || "3", 10) || 3,
+      ognl: params[5]?.trim(),
+      variables: parseVariables(params[6] ?? "")
     })
   },
   {
     name: "Trace",
     params: [
       { name: "ClassName#MethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
+      classLoaderHashParam(),
       { name: "MinCost", inputType: "text", checker: () => true, value: "0" },
       { name: "IgnoreSubMethodZeroCost", inputType: "select", checker: () => true, value: "true", options: booleanOptions },
       { name: "IncludeNested", inputType: "select", checker: () => true, value: "true", options: booleanOptions }
@@ -160,15 +174,17 @@ export const menu: FunctionDefinition[] = [
     toPayload: (params: string[]) => toolCall("trace", {
       ...commonArgs(),
       signature: params[0],
-      minCost: Number.parseInt(params[1] || "0", 10) || 0,
-      ignoreZero: params[2] !== "false",
-      includeNested: params[3] !== "false"
+      ...optionalClassLoaderHash(params[1] ?? ""),
+      minCost: Number.parseInt(params[2] || "0", 10) || 0,
+      ignoreZero: params[3] !== "false",
+      includeNested: params[4] !== "false"
     })
   },
   {
     name: "ChangeBody",
     params: [
       { name: "ClassName#MethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
+      classLoaderHashParam(),
       { name: "ParamTypes", inputType: "text", checker: () => true, value: "" },
       { name: "Engine", inputType: "select", checker: () => true, value: "asm", options: engineOptions },
       { name: "Body", inputType: "textarea", checker: () => true, value: "" }
@@ -179,9 +195,10 @@ export const menu: FunctionDefinition[] = [
         ...commonArgs(),
         className,
         method,
-        paramTypes: parseParamTypes(params[1]),
-        body: params[3],
-        mode: engineToMode(params[2])
+        ...optionalClassLoaderHash(params[1] ?? ""),
+        paramTypes: parseParamTypes(params[2]),
+        body: params[4],
+        mode: engineToMode(params[3])
       })
     }
   },
@@ -189,6 +206,7 @@ export const menu: FunctionDefinition[] = [
     name: "ChangeResult",
     params: [
       { name: "ClassName#MethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
+      classLoaderHashParam(),
       { name: "ParamTypes", inputType: "text", checker: () => true, value: "" },
       { name: "InnerClassName#InnerMethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
       { name: "Engine", inputType: "select", checker: () => true, value: "asm", options: engineOptions },
@@ -196,37 +214,42 @@ export const menu: FunctionDefinition[] = [
     ],
     toPayload: (params: string[]) => {
       const [className, method] = splitSignature(params[0])
-      const [innerClassName, innerMethod] = splitSignature(params[2])
+      const [innerClassName, innerMethod] = splitSignature(params[3])
       return toolCall("change_result", {
         ...commonArgs(),
         className,
         method,
-        paramTypes: parseParamTypes(params[1]),
+        ...optionalClassLoaderHash(params[1] ?? ""),
+        paramTypes: parseParamTypes(params[2]),
         innerClassName,
         innerMethod,
-        body: params[4],
-        mode: engineToMode(params[3])
+        body: params[5],
+        mode: engineToMode(params[4])
       })
     }
   },
   {
     name: "Decompile",
     params: [
-      { name: "ClassName", inputType: "text", checker: nonEmptyChecker, value: "" }
+      { name: "ClassName", inputType: "text", checker: nonEmptyChecker, value: "" },
+      classLoaderHashParam()
     ],
     toPayload: (params: string[]) => toolCall("decompile", {
       ...commonArgs(),
-      className: params[0]
+      className: params[0],
+      ...optionalClassLoaderHash(params[1] ?? "")
     })
   },
   {
     name: "FindSubclasses",
     params: [
-      { name: "ClassName", inputType: "text", checker: nonEmptyChecker, value: "" }
+      { name: "ClassName", inputType: "text", checker: nonEmptyChecker, value: "" },
+      classLoaderHashParam()
     ],
     toPayload: (params: string[]) => toolCall("find_subclasses", {
       ...commonArgs(),
-      className: params[0]
+      className: params[0],
+      ...optionalClassLoaderHash(params[1] ?? "")
     })
   },
   {

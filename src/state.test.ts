@@ -16,7 +16,7 @@ describe("state helpers", () => {
     const opened = openAction(initial)
     expect(opened.screen).toBe("form")
     expect(opened.focusIndex).toBe(0)
-    expect(opened.formValues.length).toBe(4)
+    expect(opened.formValues.length).toBe(5)
   })
 
   test("focus wraps across inputs and submit button", () => {
