@@ -56,7 +56,6 @@ jobs:
           fi
 
       - name: Check Release Exists
-        if: steps.version.outputs.changed == 'true'
         id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,21 +68,21 @@ jobs:
           fi
 
       - name: Install Dependencies
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: bun install
 
       - name: Build Packages
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: bun run build:npm
 
       - name: Verify Darwin Signatures
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: |
           codesign -dv --verbose=4 dist/npm/jbs-client-darwin-arm64/bin/jbs-client
           codesign -dv --verbose=4 dist/npm/jbs-client-darwin-x64/bin/jbs-client
 
       - name: Prepare Release Assets
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -104,7 +103,7 @@ jobs:
           ls -lah release-assets
 
       - name: Upload Release Assets
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.current }}
@@ -113,5 +112,5 @@ jobs:
           generate_release_notes: true
 
       - name: Publish npm Packages
-        if: steps.version.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: bun run publish:npm

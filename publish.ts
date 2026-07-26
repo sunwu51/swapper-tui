@@ -5,6 +5,7 @@ import packageJson from "./package.json" with { type: "json" };
 
 const distRoot = join("dist", "npm");
 const rootPackageName = packageJson.name;
+const registryUrl = "https://registry.npmjs.org";
 
 const platformPackages = [
   "jbs-client-windows-x64",
@@ -23,10 +24,34 @@ async function assertPublishDir(name: string) {
   }
 }
 
+async function packageVersionExists(name: string, version: string) {
+  const packageUrl = `${registryUrl}/${encodeURIComponent(name)}/${encodeURIComponent(version)}`;
+  const response = await fetch(packageUrl, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (response.status === 404) {
+    return false;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to check ${name}@${version}: npm registry returned ${response.status}`);
+  }
+
+  return true;
+}
+
 async function publishPackage(name: string) {
   await assertPublishDir(name);
+  if (await packageVersionExists(name, packageJson.version)) {
+    console.log(`Skipping ${name}@${packageJson.version}: version already exists.`);
+    return;
+  }
+
   console.log(`Publishing ${name}...`);
-  await $`npm publish --access public --provenance --registry https://registry.npmjs.org/`.cwd(join(distRoot, name));
+  await $`npm publish --access public --provenance --registry ${registryUrl}`.cwd(join(distRoot, name));
 }
 
 async function main() {
