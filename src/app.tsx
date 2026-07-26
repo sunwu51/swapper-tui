@@ -175,11 +175,8 @@ export function App({ host, port, connectBackend }: AppProps) {
 
   return (
     <box width="100%" height="100%" flexDirection="column" padding={1} gap={1} position="relative">
-      <box border borderColor="#7c3aed" paddingX={1} paddingY={0} flexDirection="row" alignItems="center" gap={1}>
-        <text>JBS Client OpenTUI</text>
-      </box>
       {toastMessage ? (
-        <box position="absolute" top={1} right={2} zIndex={20} border borderColor="#3b82f6" backgroundColor="#172554" paddingX={1} paddingY={0}>
+        <box position="absolute" top={0} right={2} zIndex={20} border borderColor="#3b82f6" backgroundColor="#172554" paddingX={1} paddingY={0}>
           <text fg="#bfdbfe">{toastMessage}</text>
         </box>
       ) : null}

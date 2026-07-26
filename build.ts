@@ -12,7 +12,7 @@ const templateDir = "scripts/npm";
 const projectRoot = resolve(".");
 const repository = {
   type: "git",
-  url: "git+https://github.com/sunwu51/jbs-client-opentui.git"
+  url: "git+https://github.com/sunwu51/swapper-tui.git"
 };
 
 const bootstrapFlag = "--darwin-codesign-bootstrap";
