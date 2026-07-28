@@ -260,11 +260,13 @@ export const menu: FunctionDefinition[] = [
         inputType: "textarea",
         checker: nonEmptyChecker,
         value: "ctx.getBeanDefinitionNames().length"
-      }
+      },
+      classLoaderHashParam()
     ],
     toPayload: (params: string[]) => toolCall("eval", {
       ...commonArgs(),
-      body: params[0]
+      body: params[0],
+      ...optionalClassLoaderHash(params[1] ?? "")
     })
   },
   {
@@ -283,11 +285,13 @@ export const menu: FunctionDefinition[] = [
       Global.error(e.toString(), e);
     }
 `
-      }
+      },
+      classLoaderHashParam()
     ],
     toPayload: (params: string[]) => toolCall("exec", {
       ...commonArgs(),
       mode: 1,
+      ...optionalClassLoaderHash(params[1] ?? ""),
       body: `package w;
 import w.Global;
 import w.util.SpringUtils;

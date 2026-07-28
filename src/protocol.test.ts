@@ -59,9 +59,16 @@ describe("protocol", () => {
     expect(findPayload.params.name).toBe("find_subclasses")
     expect(findPayload.params.arguments.className).toBe("demo.Parent")
 
-    const evalPayload = parseToolCall(actionIndex("Eval"), ["1 + 1"])
+    const evalPayload = parseToolCall(actionIndex("Eval"), ["1 + 1", " eval-loader "])
     expect(evalPayload.params.name).toBe("eval")
     expect(evalPayload.params.arguments.body).toBe("1 + 1")
+    expect(evalPayload.params.arguments.classLoaderHash).toBe("eval-loader")
+
+    const execValues = buildInitialFormValues(actionIndex("Exec"))
+    execValues[1] = "exec-loader"
+    const execPayload = parseToolCall(actionIndex("Exec"), execValues)
+    expect(execPayload.params.name).toBe("exec")
+    expect(execPayload.params.arguments.classLoaderHash).toBe("exec-loader")
   })
 
   test("buildPayload serializes async diagnostic tool options", () => {
@@ -104,6 +111,12 @@ describe("protocol", () => {
         values[0] = "demo.Service"
       }
       expect(parseToolCall(index, values).params.arguments.classLoaderHash).toBeUndefined()
+    }
+
+    for (const actionName of ["Eval", "Exec"]) {
+      const index = actionIndex(actionName)
+      expect(menu[index]?.params[1]?.name).toBe("ClassLoaderHash (optional)")
+      expect(parseToolCall(index, buildInitialFormValues(index)).params.arguments.classLoaderHash).toBeUndefined()
     }
   })
 
