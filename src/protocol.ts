@@ -137,6 +137,7 @@ export const menu: FunctionDefinition[] = [
       classLoaderHashParam(),
       { name: "InnerClassName#InnerMethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
       { name: "IncludeNested", inputType: "select", checker: () => true, value: "true", options: booleanOptions },
+      { name: "PrintLvt", inputType: "select", checker: () => true, value: "false", options: booleanOptions },
       { name: "DepthForJson", inputType: "text", checker: () => true, value: "3" },
       {
         name: "OGNL",
@@ -157,9 +158,10 @@ export const menu: FunctionDefinition[] = [
       ...optionalClassLoaderHash(params[1] ?? ""),
       innerSignature: params[2],
       includeNested: params[3] !== "false",
-      depthForJson: Number.parseInt(params[4] || "3", 10) || 3,
-      ognl: params[5]?.trim(),
-      variables: parseVariables(params[6] ?? "")
+      printLvt: params[4] === "true",
+      depthForJson: Number.parseInt(params[5] || "3", 10) || 3,
+      ognl: params[6]?.trim(),
+      variables: parseVariables(params[7] ?? "")
     })
   },
   {

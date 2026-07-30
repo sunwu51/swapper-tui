@@ -80,10 +80,11 @@ describe("protocol", () => {
     expect(watchPayload.params.arguments.ognl).toBe("name")
     expect(watchPayload.params.arguments.variables).toEqual({ arg: "#req[0]" })
 
-    const outerWatchPayload = parseToolCall(actionIndex("OuterWatch"), ["a.B#c", "", "*#run", "true", "5", "", ""])
+    const outerWatchPayload = parseToolCall(actionIndex("OuterWatch"), ["a.B#c", "", "*#run", "true", "true", "5", "", ""])
     expect(outerWatchPayload.params.name).toBe("outer_watch")
     expect(outerWatchPayload.params.arguments.innerSignature).toBe("*#run")
     expect(outerWatchPayload.params.arguments.includeNested).toBe(true)
+    expect(outerWatchPayload.params.arguments.printLvt).toBe(true)
     expect(outerWatchPayload.params.arguments.depthForJson).toBe(5)
     expect(outerWatchPayload.params.arguments.ognl).toBeUndefined()
 
