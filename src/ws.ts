@@ -32,6 +32,12 @@ type JsonRpcResponse = {
   }
 }
 
+type JsonRpcRequest = {
+  params?: {
+    name?: string
+  }
+}
+
 function formatLog(content: string): string {
   const timestamp = new Date()
   const formatted = timestamp.toISOString().replace("T", " ").slice(0, 19)
@@ -96,6 +102,15 @@ function formatJsonRpcResponse(response: JsonRpcResponse): string {
   }
 
   return truncate(`[response] ${JSON.stringify(response)}`)
+}
+
+export function shouldLogJsonRpcResponse(toolName: string | undefined, response: JsonRpcResponse): boolean {
+  if (toolName !== "decompile") {
+    return true
+  }
+
+  const structured = response.result?.structuredContent
+  return Boolean(response.error || response.result?.isError || !structured || structured.success === false)
 }
 
 function parseSseEvents(buffer: string, onEvent: (data: string) => void): string {
@@ -175,6 +190,12 @@ export function connectHttpTransport(options: ConnectionOptions): { send: (messa
         return
       }
       void (async () => {
+        let toolName: string | undefined
+        try {
+          toolName = (JSON.parse(message) as JsonRpcRequest).params?.name
+        } catch {
+          // The backend response remains authoritative for malformed requests.
+        }
         try {
           const response = await fetch(endpoint(baseUrl, "/mcp"), {
             method: "POST",
@@ -190,7 +211,10 @@ export function connectHttpTransport(options: ConnectionOptions): { send: (messa
             return
           }
           try {
-            options.onLog(formatLog(formatJsonRpcResponse(JSON.parse(text) as JsonRpcResponse)))
+            const jsonResponse = JSON.parse(text) as JsonRpcResponse
+            if (shouldLogJsonRpcResponse(toolName, jsonResponse)) {
+              options.onLog(formatLog(formatJsonRpcResponse(jsonResponse)))
+            }
           } catch {
             options.onLog(formatLog(`[response] ${truncate(text)}`))
           }
