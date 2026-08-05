@@ -92,6 +92,14 @@ describe("protocol", () => {
     expect(tracePayload.params.name).toBe("trace")
     expect(tracePayload.params.arguments.ignoreZero).toBe(true)
     expect(tracePayload.params.arguments.includeNested).toBe(true)
+
+    const changeResultPayload = parseToolCall(actionIndex("ChangeResult"),
+      ["a.B#c", "", "int", "a.Inner#call", "asm", "false", "$_ = 1;"])
+    expect(changeResultPayload.params.name).toBe("change_result")
+    expect(changeResultPayload.params.arguments.innerMethod).toBe("call")
+    expect(changeResultPayload.params.arguments.mode).toBe(1)
+    expect(changeResultPayload.params.arguments.includeNested).toBe(false)
+    expect(changeResultPayload.params.arguments.body).toBe("$_ = 1;")
   })
 
   test("class-target actions expose an optional hash and omit it when blank", () => {
@@ -104,7 +112,7 @@ describe("protocol", () => {
         values[0] = "demo.Service#run"
       } else if (["ChangeBody", "ChangeResult"].includes(actionName)) {
         values[0] = "demo.Service#run"
-        values[actionName === "ChangeBody" ? 4 : 5] = "return;"
+        values[actionName === "ChangeBody" ? 4 : 6] = "return;"
         if (actionName === "ChangeResult") {
           values[3] = "demo.Inner#call"
         }

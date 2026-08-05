@@ -212,6 +212,7 @@ export const menu: FunctionDefinition[] = [
       { name: "ParamTypes", inputType: "text", checker: () => true, value: "" },
       { name: "InnerClassName#InnerMethodName", inputType: "text", checker: classAndMethodChecker, value: "" },
       { name: "Engine", inputType: "select", checker: () => true, value: "asm", options: engineOptions },
+      { name: "IncludeNested", inputType: "select", checker: () => true, value: "true", options: booleanOptions },
       { name: "Body", inputType: "textarea", checker: () => true, value: "" }
     ],
     toPayload: (params: string[]) => {
@@ -225,8 +226,9 @@ export const menu: FunctionDefinition[] = [
         paramTypes: parseParamTypes(params[2]),
         innerClassName,
         innerMethod,
-        body: params[5],
-        mode: engineToMode(params[4])
+        body: params[6],
+        mode: engineToMode(params[4]),
+        includeNested: params[5] !== "false"
       })
     }
   },
